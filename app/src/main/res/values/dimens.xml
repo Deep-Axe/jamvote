@@ -1,0 +1,14 @@
+<resources>
+    <dimen name="card_radius">14dp</dimen>
+    <dimen name="card_padding_h">12dp</dimen>
+    <dimen name="card_padding_v">10dp</dimen>
+    <dimen name="screen_padding_h">14dp</dimen>
+    <dimen name="gold_accent_bar">3dp</dimen>   <!-- left border on top item -->
+    <dimen name="album_art_size">54dp</dimen>
+    <dimen name="mini_art_size">38dp</dimen>
+    <dimen name="nav_height">60dp</dimen>
+    <dimen name="section_label_size">10sp</dimen>
+    <dimen name="track_title_size">14sp</dimen>
+    <dimen name="track_artist_size">11sp</dimen>
+    <dimen name="vote_btn_size">10sp</dimen>
+</resources>

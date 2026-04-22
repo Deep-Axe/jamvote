@@ -1,0 +1,65 @@
+plugins {
+    alias(libs.plugins.android.application)
+    id 'com.google.gms.google-services'
+}
+
+Properties localProperties = new Properties()
+if (project.rootProject.file('local.properties').exists()) {
+    localProperties.load(project.rootProject.file('local.properties').newDataInputStream())
+}
+
+android {
+    namespace 'com.jamvote.app'
+    compileSdk 36
+
+    buildFeatures {
+        buildConfig = true
+    }
+
+    defaultConfig {
+        applicationId "com.jamvote.app"
+        minSdk 25
+        targetSdk 36
+        versionCode 1
+        versionName "1.0"
+        testInstrumentationRunner "androidx.test.runner.AndroidJUnitRunner"
+
+        buildConfigField "String", "YOUTUBE_API_KEY", "\"${localProperties.getProperty('youtube_api_key')}\""
+        buildConfigField "String", "SHA1_FINGERPRINT", "\"${localProperties.getProperty('sha1_fingerprint')}\""
+    }
+
+    buildTypes {
+        release {
+            minifyEnabled false
+            proguardFiles getDefaultProguardFile('proguard-android-optimize.txt'), 'proguard-rules.pro'
+        }
+    }
+    compileOptions {
+        sourceCompatibility JavaVersion.VERSION_11
+        targetCompatibility JavaVersion.VERSION_11
+    }
+}
+
+dependencies {
+    implementation libs.appcompat
+    implementation libs.material
+    implementation libs.activity
+    implementation libs.constraintlayout
+
+    // Firebase
+    implementation platform('com.google.firebase:firebase-bom:32.7.4')
+    implementation 'com.google.firebase:firebase-auth'
+    implementation 'com.google.firebase:firebase-firestore'
+    implementation 'com.google.firebase:firebase-database'
+
+    // Image loading
+    implementation 'com.github.bumptech.glide:glide:4.16.0'
+
+    // Jetpack Lifecycle
+    implementation 'androidx.lifecycle:lifecycle-viewmodel:2.7.0'
+    implementation 'androidx.lifecycle:lifecycle-livedata:2.7.0'
+
+    testImplementation libs.junit
+    androidTestImplementation libs.ext.junit
+    androidTestImplementation libs.espresso.core
+}

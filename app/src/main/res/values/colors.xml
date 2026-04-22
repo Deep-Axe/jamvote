@@ -1,0 +1,31 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <!-- Base -->
+    <color name="wakandan_black">#080a0f</color>
+    <color name="wakandan_surface">#0f1219</color>
+    <color name="wakandan_surface_2">#161b26</color>
+
+    <!-- Gold/Yellow accent (Updated per restriction) -->
+    <color name="wakandan_gold">#C58B07</color>
+    <color name="wakandan_gold_light">#FACF6B</color>
+    <color name="wakandan_gold_dim">#C58B0733</color>
+    <color name="wakandan_gold_border">#C58B0744</color>
+
+    <!-- Purple accent (Updated per restriction) -->
+    <color name="wakandan_purple">#39125E</color>
+    <color name="wakandan_purple_light">#5a3cc8</color> <!-- Fallback light shade -->
+
+    <!-- Text -->
+    <color name="wakandan_text_primary">#f0e6c8</color>
+    <color name="wakandan_text_secondary">#C58B0799</color>
+    <color name="wakandan_text_muted">#ffffff33</color>
+
+    <!-- Status -->
+    <color name="live_green">#4eff9a</color>
+    <color name="explicit_red">#ff7070</color>
+    <color name="explicit_red_dim">#ff606020</color>
+
+    <!-- Glow overlays -->
+    <color name="glow_purple">#39125E40</color>
+    <color name="glow_blue">#1a4fa840</color>
+</resources>

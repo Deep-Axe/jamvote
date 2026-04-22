@@ -1,0 +1,72 @@
+<?xml version="1.0" encoding="utf-8"?>
+<androidx.constraintlayout.widget.ConstraintLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:app="http://schemas.android.com/apk/res-auto"
+    xmlns:tools="http://schemas.android.com/tools"
+    android:layout_width="match_parent"
+    android:layout_height="match_parent"
+    android:background="@drawable/bg_wakandan"
+    tools:context=".JoinRoomActivity">
+
+    <com.jamvote.app.GeometricPatternView
+        android:id="@+id/geoPattern"
+        android:layout_width="match_parent"
+        android:layout_height="match_parent"
+        android:alpha="0.07"
+        android:clickable="false"
+        android:focusable="false"
+        android:importantForAccessibility="no" />
+
+    <LinearLayout
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:orientation="vertical"
+        android:padding="@dimen/screen_padding_h"
+        app:layout_constraintBottom_toBottomOf="parent"
+        app:layout_constraintTop_toTopOf="parent">
+
+        <TextView
+            android:id="@+id/tvTitle"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:layout_gravity="center"
+            android:layout_marginBottom="32dp"
+            android:text="@string/join_room_title"
+            android:textSize="28sp"
+            android:textStyle="bold"
+            android:textColor="@color/wakandan_purple"
+            android:letterSpacing="0.05" />
+
+        <com.google.android.material.textfield.TextInputLayout
+            android:id="@+id/tilRoomCode"
+            style="@style/Widget.MaterialComponents.TextInputLayout.OutlinedBox"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:layout_marginBottom="24dp"
+            android:hint="@string/room_code_hint"
+            app:boxStrokeColor="@color/wakandan_purple"
+            app:hintTextColor="@color/wakandan_purple">
+
+            <com.google.android.material.textfield.TextInputEditText
+                android:id="@+id/etRoomCode"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:gravity="center"
+                android:inputType="textCapCharacters"
+                android:maxLength="4"
+                android:textColor="@color/wakandan_text_primary"
+                android:textSize="24sp"
+                android:textStyle="bold" />
+        </com.google.android.material.textfield.TextInputLayout>
+
+        <Button
+            android:id="@+id/btnJoin"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:background="@drawable/btn_purple"
+            android:text="@string/btn_join_room"
+            android:textColor="@android:color/white"
+            android:textStyle="bold" />
+
+    </LinearLayout>
+
+</androidx.constraintlayout.widget.ConstraintLayout>

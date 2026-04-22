@@ -1,0 +1,14 @@
+<resources xmlns:tools="http://schemas.android.com/tools">
+    <style name="Theme.JamVote" parent="Theme.MaterialComponents.DayNight.NoActionBar">
+        <item name="colorPrimary">@color/wakandan_gold</item>
+        <item name="colorPrimaryVariant">@color/wakandan_gold_light</item>
+        <item name="colorOnPrimary">@color/wakandan_black</item>
+        <item name="colorSurface">@color/wakandan_surface</item>
+        <item name="colorOnSurface">@color/wakandan_text_primary</item>
+        <item name="android:windowBackground">@color/wakandan_black</item>
+        <item name="android:statusBarColor">@color/wakandan_black</item>
+        <item name="android:navigationBarColor">@color/wakandan_black</item>
+    </style>
+
+    <style name="Theme.App" parent="Theme.JamVote" />
+</resources>

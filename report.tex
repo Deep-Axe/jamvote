@@ -1,0 +1,1120 @@
+\documentclass[pdflatex,sn-mathphys-num,iicol]{sn-jnl}
+\usepackage[utf8]{inputenc}
+\usepackage{graphicx}%
+\usepackage{multirow}%
+\usepackage{amsmath,amssymb,amsfonts}%
+\usepackage{amsthm}%
+\usepackage{mathrsfs}%
+\usepackage[title]{appendix}%
+\usepackage{xcolor}%
+\usepackage{textcomp}%
+\usepackage{manyfoot}%
+\usepackage{booktabs}%
+\usepackage{algorithm}%
+\usepackage{algorithmicx}%
+\usepackage{algpseudocode}%
+\usepackage{listings}%
+\usepackage{verbatim}%
+
+\usepackage{float}
+\usepackage{stfloats}
+\theoremstyle{thmstyleone}%
+\newtheorem{theorem}{Theorem}%
+\newtheorem{proposition}[theorem]{Proposition}%
+
+\theoremstyle{thmstyletwo}%
+\newtheorem{example}{Example}%
+\newtheorem{remark}{Remark}%
+
+\theoremstyle{thmstylethree}%
+\newtheorem{definition}{Definition}%
+
+\raggedbottom
+
+
+\begin{document}
+
+\title[Article Title]{JamVote - Collaborative Music Room}
+
+\author*[1]{\fnm{Deepam} \sur{Ahuja}}\email{deepam.mitmpl2023@learner.manipal.edu}
+\begin{comment}
+    \author*[1]{\fnm{Rusheel} \sur{Reddy}}\email{rusheel.mitmpl2023@learner.manipal.edu}
+\author*[1]{\fnm{Tanish} \sur{Sam Mathai}}\email{tanish.mitmpl2023@learner.manipal.edu}
+\author*[1]{\fnm{Anshu} \sur{Malagi}}\email{anshu.mitmpl2023@learner.manipal.edu}
+\end{comment}
+
+
+\affil*[1]{\orgdiv{School of Computer Engineering}, \orgname{Manipal Institute of Technology},
+\orgname{Manipal Academy of Higher Education},
+\orgaddress{\city{Manipal}, \postcode{576104}, \state{Karnataka}, \country{India}}}
+
+\abstract{Collaborative music listening in group settings suffers from well-documented
+governance failures: existing platforms permit arbitrary queue manipulation by individual
+users, provide no structured collective feedback mechanism, and make no distinction between
+active and inactive participants. JamVote is a native Android application that addresses
+these limitations through a non-blocking democratic queue governance model built on Firebase
+Firestore. The system assigns each queued song a dynamic score computed from upvotes,
+downvotes, and the contributor's historical reputation, with the queue ordered
+dynamically by vote score in real time across all connected clients. The host has the ability to skip the currently playing song at any time, immediately
+advancing the queue to the next highest-voted song. A
+session-end gamification layer computes per-user reputation deltas and distributes
+badges across three award categories. The proposed system
+demonstrates that lightweight distributed systems design, without a dedicated backend
+server, can sustain real-time democratic queue management across concurrent mobile clients.}
+
+\keywords{Android Application Development, Real-Time Systems, Dynamic Queue Management,
+Non-Blocking Voting Systems, Music Recommendation Algorithms, Gamification,
+Engagement-Based Ranking, Distributed Systems}
+
+\maketitle
+
+\newpage
+
+%% ─────────────────────────────────────────────
+%%  SECTION 1 — INTRODUCTION
+%% ─────────────────────────────────────────────
+\section{Introduction}\label{sec:intro}
+
+\subsection{Background and Importance}
+
+Shared music listening has long been a cornerstone of social interaction, from communal
+gatherings to remote friend groups connected over the internet. The scale of this shift
+toward digital listening is substantial: according to the International Federation of the
+Phonographic Industry, paid music streaming subscription accounts reached 752 million
+globally in 2024, growing at 10.6\% year-on-year, with streaming now accounting for
+69\% of all recorded music revenues worldwide~\cite{ifpi_gmr_2025}. The proliferation of
+smartphones and cloud-based streaming services has made collaborative listening
+technically feasible; platforms such as Spotify, Apple Music, and YouTube Music offer
+rudimentary shared playlist features. However, the social dynamics of group listening
+introduce challenges that go beyond simple playlist sharing. In a group setting, musical
+preference is inherently heterogeneous, and the governance of a shared queue directly
+affects the experience of every participant. When one user can arbitrarily reorder or
+dominate a queue, the collaborative experience degrades into single-user control with a
+passive audience.
+
+The demand for fairer, more engaging collaborative listening systems is evidenced by the
+growing popularity of DJ-style party applications and crowd-sourced jukebox concepts.
+Yet, existing solutions lack the infrastructure to dynamically balance democratic
+participation, fairness constraints, playback continuity, and social engagement within a
+single, lightweight mobile application.
+
+\subsection{Problem Context and Practical Significance}
+
+Existing collaborative music platforms exhibit several well-documented limitations. First,
+they permit manual queue reordering, enabling any participant to override the collective
+preference. Second, they provide no structured mechanism for collective feedback; users
+cannot signal approval or disapproval of queued songs in real time. Third, when a shared
+queue is exhausted, playback falls back to an individual user's library, breaking the
+collaborative experience. Fourth, these systems make no distinction between active and
+inactive participants, allowing a user who has left the session to retain influence over
+the queue. Finally, there is no incentive structure to encourage high-quality music
+curation; all contributions, regardless of reception, are treated equally.
+
+These limitations result in sessions that are either chaotic due to unconstrained
+manipulation, or stagnant due to the absence of automated continuity mechanisms. The
+practical significance of addressing these gaps extends to parties, corporate events,
+remote collaborative work sessions, and any environment where a group shares an audio
+space.
+
+\subsection{Research Gap}
+
+A review of the existing literature reveals that prior work addresses isolated components
+of this problem without integrating them into a cohesive system. Recommender systems for
+groups~\cite{jamvote_group_context_mdpi, jamvote_recommendation_groups} propose
+aggregation strategies but do not implement real-time queue control or session governance.
+Voting-based systems such as Liquid FM~\cite{jamvote_arxiv_social_music} demonstrate
+collective ranking but impose computational complexity that limits lightweight mobile
+deployment. Studies on collaborative playlist
+behaviour~\cite{jamvote_collaborative_playlists_study} confirm user preference for
+lightweight governance but provide no algorithmic implementation. Gamification and
+reputation research~\cite{jamvote_online_community_motivation, jamvote_gamification_works}
+demonstrates that visible reward systems improve engagement but does not evaluate
+manipulation resistance in competitive voting environments.
+
+Critically, no existing work combines real-time democratic queue management,
+engagement-weighted scoring with fairness constraints, active user tracking for adaptive
+governance, and a gamification layer within a single deployable mobile application. This
+constitutes the central gap that JamVote addresses.
+
+\subsection{Research Question}
+
+This work addresses the following research question: \textit{How can a mobile application
+implement a non-blocking, democratic music queue system that dynamically balances
+collective engagement, user fairness, and playback continuity without requiring unanimous
+participation or a centralised moderator?}
+
+\subsection{Research Objectives}
+
+The objectives of this project are as follows:
+
+\begin{enumerate}
+    \item To design and implement a real-time collaborative music Android application
+    using Firebase Firestore as the synchronisation backend, supporting both private and
+    public listening rooms.
+
+    \item To implement a non-blocking democratic queue management system in which
+    playback continuity is guaranteed regardless of participant voting activity.
+
+    \item To develop a dynamic song scoring mechanism that ranks queued songs based on
+    upvotes, downvotes, and the reputation weight of the song's contributor, with queue
+    reordering triggered only on song completion to prevent disruptive mid-session
+    reshuffling.
+
+    \item To implement active user tracking via periodic presence heartbeats, enabling
+    the system to reflect only currently engaged participants in the active user count.
+
+    \item To design and integrate a gamification and reputation system that incentivises
+    high-quality music curation through session-end awards and persistent reputation
+    scores.
+
+    \item To evaluate the system through functional testing across multiple concurrent
+    users on physical Android devices.
+\end{enumerate}
+
+\subsection{Research Contribution}
+
+This work makes the following contributions:
+
+\begin{enumerate}
+    \item \textbf{Non-blocking democratic queue governance}: A voting-based queue
+    management system in which playback is never stalled by insufficient votes. Songs
+    advance automatically when their duration expires, and the host can skip the
+    currently playing song at any time to advance the queue.
+
+    \item \textbf{Real-time score-based queue ordering}: Queued songs are ordered
+    dynamically by their computed vote score via a live Firestore query, ensuring that
+    the highest-voted song is always displayed at the top and selected for playback
+    next without any manual intervention.
+
+    \item \textbf{Vote deduplication}: Each vote is stored as a Firestore document with
+    a composite key of the form \texttt{\{userId\}\_\{songId\}}, enforcing the
+    one-vote-per-user-per-song constraint at the database level without requiring a
+    query, and preventing double voting or vote fabrication.
+
+    \item \textbf{Active presence-aware governance}: A lightweight heartbeat-based
+    presence tracking system that maintains a real-time active user count, reflecting
+    only participants who are currently engaged in the session.
+
+    \item \textbf{Full-stack gamification}: A session-end reputation system that
+    rewards curators based on upvotes and downvotes received on their contributed
+    songs, with a participation bonus applied for active contributors, persisted
+    across sessions in a cloud database.
+\end{enumerate}
+
+\subsection{Paper Roadmap}
+
+The remainder of this report is structured as follows.
+Section~\ref{sec:litreview} reviews related work in collaborative playlist systems,
+group recommender systems, and engagement-driven platforms, and identifies the gaps that
+motivate this work. Section~\ref{sec:methodology} describes the system architecture,
+data model, scoring algorithm, and implementation methodology.
+Section~\ref{sec:results} presents the results of functional evaluation across
+multi-device test scenarios. Section~\ref{sec:conclusion} summarises the findings and
+restates the project contributions. Section~\ref{sec:limitations} discusses the
+constraints and scope boundaries of this study. Section~\ref{sec:future} outlines
+directions for future development.
+
+%% ─────────────────────────────────────────────
+%%  SECTION 2 — LITERATURE SURVEY
+%% ─────────────────────────────────────────────
+\section{Literature Survey}\label{sec:litreview}
+
+The following subsections review work across five relevant areas: collaborative playlist
+behaviour, automated recommendation, group recommender systems, prior collaborative music
+applications, and gamification. Table~\ref{tab:litreview} provides a consolidated
+comparative summary.
+
+%% TABLE 1 — placed HERE, before subsections, so LaTeX floats it
+%% within the Literature Survey section rather than after Methodology.
+\begin{table*}[!ht]
+\centering
+\caption{Comparative Analysis of Related Work}
+\label{tab:litreview}
+\begin{tabular}{p{2.8cm} p{0.9cm} p{3.0cm} p{3.5cm} p{3.5cm}}
+\toprule
+\textbf{Author(s)} & \textbf{Year} & \textbf{Technique / Model} & \textbf{Key Contribution} & \textbf{Limitation} \\
+\midrule
+
+Park et al.~\cite{jamvote_collaborative_playlists_study}
+& 2023
+& Cross-cultural survey and statistical analysis
+& Identifies user preference for lightweight governance in collaborative playlists
+& No algorithmic implementation; inactive user differentiation not addressed \\
+
+\addlinespace
+
+Patel et al.~\cite{jamvote_integrated_playlist}
+& 2023
+& Hybrid collaborative and content-based filtering
+& Automated playlist expansion with improved recommendation relevance
+& Assumes single-user ownership; multi-user conflict resolution not addressed \\
+
+\addlinespace
+
+Chen~\cite{jamvote_cf_svd_ieee}
+& 2023
+& Collaborative filtering with SVD
+& Improves recommendation accuracy via latent feature extraction
+& Targets individual personalisation; synchronous group environments not handled \\
+
+\addlinespace
+
+Valera et al.~\cite{jamvote_group_context_mdpi}
+& 2021
+& Context-aware group aggregation
+& Improves group satisfaction using fairness-aware aggregation strategies
+& Evaluated on simulated data; real-time voting and playback continuity not implemented \\
+
+\addlinespace
+
+Liquid FM~\cite{jamvote_arxiv_social_music}
+& 2015
+& Voting-based viscous democracy model
+& Collective vote-based music ranking via trust delegation
+& Computational complexity limits mobile deployment; no playback continuity \\
+
+\addlinespace
+
+Jameson \& Smyth~\cite{jamvote_recommendation_groups}
+& 2007
+& Group aggregation (Borda count, least misery)
+& Demonstrates that adaptive aggregation improves fairness perception
+& Live session queue control and active user tracking not addressed \\
+
+\addlinespace
+
+Cunningham et al.~\cite{jamvote_playlist_creation_art}
+& 2006
+& Qualitative playlist analysis
+& Identifies thematic and emotional logic in playlist construction
+& No computational model proposed; conflict resolution not addressed \\
+
+\addlinespace
+
+Lampe et al.~\cite{jamvote_online_community_motivation}
+& 2010
+& Community participation analysis
+& Demonstrates that reputation systems significantly improve sustained engagement
+& Manipulation resistance in competitive voting contexts not evaluated \\
+
+\addlinespace
+
+Hamari et al.~\cite{jamvote_gamification_works}
+& 2014
+& Systematic review of 24 empirical gamification studies
+& Establishes that gamification produces positive engagement effects in appropriate contexts
+& Effectiveness highly context-dependent; adversarial voting settings not considered \\
+
+\addlinespace
+
+Mirea~\cite{jamvote_queue_mirea}
+& 2019
+& Host-controlled collaborative playlist mobile app (Spotify)
+& Demonstrates feasibility of multi-user collaborative song addition on mobile
+& No voting or scoring mechanism; no fairness constraints, presence tracking, or gamification \\
+
+\bottomrule
+\end{tabular}
+\end{table*}
+
+\subsection{Collaborative Playlist Behaviour}
+
+Park et al.~\cite{jamvote_collaborative_playlists_study} found through cross-cultural
+survey that users prefer lightweight governance mechanisms and that excessive control
+reduces engagement, but provide no algorithmic implementation. Cunningham et
+al.~\cite{jamvote_playlist_creation_art} established through qualitative study that
+playlist construction follows thematic and emotional logic rather than purely algorithmic
+optimisation, but propose no computational model for conflict resolution between
+concurrent contributors.
+
+\subsection{Automated Playlist Expansion and Individual Recommendation}
+
+Patel et al.~\cite{jamvote_integrated_playlist} proposed a hybrid collaborative and
+content-based filtering system for playlist expansion, improving recommendation relevance
+but assuming single-user ownership with no mechanism for multi-user conflict resolution.
+Chen~\cite{jamvote_cf_svd_ieee} applied SVD to a user-item interaction matrix for music
+recommendation, achieving improved accuracy over neighbourhood-based methods but targeting
+individual personalisation rather than synchronous group listening.
+
+\subsection{Group Recommender Systems and Aggregation}
+
+Valera et al.~\cite{jamvote_group_context_mdpi} evaluated context-aware aggregation
+strategies including least misery and fairness-aware methods, demonstrating improved group
+satisfaction on simulated datasets but without real-time voting or playback continuity.
+Jameson and Smyth~\cite{jamvote_recommendation_groups} studied Borda count and weighted
+averaging for group recommendation, showing that adaptive aggregation improves fairness
+perception, but did not address live session queue control or active user tracking. The
+Liquid FM model~\cite{jamvote_arxiv_social_music} introduced viscous democracy-based
+music ranking via vote delegation, improving on majority voting but with computational
+complexity that limits mobile deployment and no playback continuity mechanism.
+
+\subsection{Prior Collaborative Music Applications}
+
+Mirea~\cite{jamvote_queue_mirea} implemented a host-controlled collaborative playlist
+mobile application connected to Spotify, demonstrating the feasibility of multi-user song
+addition on mobile. However, the system provides no voting or scoring for queue
+prioritisation, no fairness constraints, no active user tracking, and no gamification
+layer.
+
+\subsection{User Participation and Gamification}
+
+Lampe et al.~\cite{jamvote_online_community_motivation} demonstrated through large-scale
+community analysis that visible reputation systems significantly improve sustained
+engagement, but did not evaluate manipulation resistance in competitive voting contexts.
+Hamari, Koivisto, and Sarsa~\cite{jamvote_gamification_works} conducted a systematic
+review of 24 empirical gamification studies, finding generally positive effects on
+engagement but noting that effectiveness is highly context-dependent and moderated by the
+quality of reward design.
+
+\subsection{Research Gap}
+
+The reviewed literature reveals two persistent and unresolved gaps. First, a
+\textit{methodological gap}: existing group recommender
+systems~\cite{jamvote_group_context_mdpi, jamvote_recommendation_groups} and voting
+models~\cite{jamvote_arxiv_social_music} evaluate aggregation strategies on static
+datasets without implementing real-time playback continuity or session-level governance,
+making their findings inapplicable to live collaborative environments. Second, a
+\textit{practical-knowledge gap}: the only directly comparable mobile
+deployment~\cite{jamvote_queue_mirea} demonstrates multi-user song addition but omits
+voting, scoring, fairness constraints, and gamification entirely, while gamification
+research~\cite{jamvote_gamification_works, jamvote_online_community_motivation}
+establishes engagement benefits without evaluating manipulation resistance in adversarial,
+real-time voting contexts. Together, these gaps mean no existing system can simultaneously
+guarantee playback continuity, enforce democratic fairness, adapt governance to active
+participant count, and incentivise quality curation within a single lightweight mobile
+application. JamVote addresses this by integrating all four capabilities into a single
+serverless Android application built on Firebase Firestore, directly bridging the divide
+between theoretical aggregation research and practical deployable governance.
+
+%% ─────────────────────────────────────────────
+%%  SECTION 3 — METHODOLOGY
+%% ─────────────────────────────────────────────
+
+\clearpage
+\section{Methodology}\label{sec:methodology}
+
+\subsection{System Overview}
+
+JamVote is implemented as a native Android application using Java, XML-based layouts,
+and a Groovy DSL Gradle build configuration, targeting Android API 25 (Android 7.1
+Nougat) as the minimum SDK and API 34 as the target. The application uses Firebase
+Authentication for identity management and Cloud Firestore as the sole backend data
+store, eliminating the need for a dedicated application server. All client devices
+communicate exclusively through Firestore snapshot listeners, which push document
+updates to all connected clients within approximately one to two seconds of a write
+operation. The host device additionally manages playback via a YouTube IFrame API
+embedded in a \texttt{WebView}, with non-host clients synchronising to the currently
+playing video by observing the \texttt{nowPlaying} field on the room document.
+
+The overall system is composed of six functional modules: User Authentication and Room
+Management, Real-Time Collaborative Queue, Non-Blocking Voting, Presence and Active
+User Tracking, Playback Management, and Gamification and Reputation. These modules
+interact exclusively through Firestore documents and are mediated by a centralised
+\texttt{FirebaseUtil} class, which is the sole point of contact between application
+logic and the Firebase SDK. No Activity or ViewModel calls the Firebase SDK directly.
+
+\subsection{System Architecture}
+
+Figure~\ref{fig:arch} illustrates the high-level architecture of JamVote. The client
+layer consists of Android devices running the JamVote application. Each client maintains
+a persistent Firestore snapshot listener for the room document, the queue
+sub-collection, and the presence sub-collection. Write operations (votes, song
+additions, presence heartbeats) are issued by individual clients through
+\texttt{FirebaseUtil} and propagate to all other clients via Firestore's real-time
+notification infrastructure.
+
+
+The architecture follows a strict layering policy: Activities observe LiveData exposed
+by ViewModels, ViewModels issue calls to \texttt{FirebaseUtil}, and
+\texttt{FirebaseUtil} is the only class that interacts with the Firestore SDK. This
+enforces separation of concerns and ensures that Firebase error handling is centralised.
+All Firebase operations are asynchronous and use callback interfaces
+(\texttt{AuthCallback}, \texttt{RoomCallback}, \texttt{SimpleCallback}, etc.) to
+propagate results back to the ViewModel layer.
+
+Music search is handled by the \texttt{YouTubeProvider} class, which issues search
+queries to the YouTube Data API v3. A second batch API call to the \texttt{videos}
+endpoint retrieves \texttt{contentDetails} for the returned videos and performs
+explicit content detection by checking whether
+\texttt{contentDetails.contentRating.ytRating} equals \texttt{ytAgeRestricted}.
+
+\begin{figure}[!ht]
+\centering
+\includegraphics[width=0.85\linewidth]{arch_diag.png}
+\caption{High-level system architecture. All clients communicate through Cloud Firestore;
+no dedicated application server is required.}
+\label{fig:arch}
+\end{figure}
+
+\subsection{Data Model}
+
+The Firestore data model is organised into a top-level \texttt{users} collection and a
+top-level \texttt{rooms} collection. The \texttt{rooms} collection contains three
+sub-collections per room: \texttt{queue}, \texttt{votes}, and \texttt{presence}.
+Table~\ref{tab:schema} summarises the key document structures.
+
+%% TABLE 2 — placed here, inside Data Model subsection where it is referenced.
+\begin{table*}[!ht]
+\centering
+\caption{Firestore document schema summary}
+\label{tab:schema}
+\begin{tabular}{p{2.0cm} p{2.2cm} p{4.8cm}}
+\toprule
+\textbf{Collection} & \textbf{Key Fields} & \textbf{Purpose} \\
+\midrule
+\texttt{users} & \texttt{uid}, \texttt{reputation}, \texttt{badges} &
+Persistent user profile and cross-session reputation \\
+\addlinespace
+\texttt{rooms} & \texttt{roomCode}, \texttt{hostUid}, \texttt{status},
+\texttt{sfwMode} &
+Room state, host identity, content filter flag \\
+\addlinespace
+\texttt{queue} & \texttt{youtubeVideoId}, \texttt{score}, \texttt{position},
+\texttt{addedByUid} &
+Ordered song queue with computed scores \\
+\addlinespace
+\texttt{votes} & \texttt{userId}, \texttt{songId}, \texttt{value} &
+One document per user-song pair; composite key prevents double voting \\
+\bottomrule
+\end{tabular}
+\end{table*}
+
+The \texttt{votes} sub-collection uses a composite document ID of the form
+\texttt{\{userId\}\_\{songId\}}, which enforces the one-vote-per-user-per-song
+constraint at the database level without requiring a query.
+
+Active user presence is tracked using Firebase Realtime Database (RTDB) rather than
+Firestore. Each client writes its display name to the path
+\texttt{presence/\{roomId\}/\{uid\}} in RTDB on joining and on each heartbeat tick.
+An \texttt{onDisconnect().removeValue()} handler is registered once per session,
+causing the RTDB entry to be removed automatically when the client loses connectivity,
+ensuring disconnected users are no longer counted as active. As a complementary
+staleness filter, a user is classified as active only if their presence entry was
+updated within the following window:
+
+\begin{equation}
+\text{lastSeen} > t_{\text{now}} - 90\text{ seconds}
+\label{eq:presence}
+\end{equation}
+
+Each client writes a heartbeat every 30 seconds, ensuring that connected clients
+consistently satisfy this condition while unresponsive clients are filtered out even
+if their RTDB entry has not yet been removed.
+
+\subsection{Core Algorithm Design}
+
+\subsubsection{Dynamic Score Formula}
+
+Each song in the queue is assigned a dynamic score used to determine playback order.
+The score is defined as:
+
+\begin{equation}
+\text{score} = (\text{upvotes} - \text{downvotes}) +
+\left\lfloor \frac{\text{adder\_reputation}}{10} \right\rfloor
+\label{eq:score}
+\end{equation}
+
+where \texttt{adder\_reputation} is the persistent reputation score of the user who
+added the song, not the users who voted. The floor division by 10 ensures that
+reputation acts as a minor tiebreaker rather than a dominant factor, preserving the
+primacy of collective voting. The score is recomputed and written to Firestore after
+every vote event by the voting user's client.
+
+\subsubsection{Dynamic Score-Based Queue Ordering}
+
+The queue sub-collection is queried with an \texttt{orderBy("score", DESCENDING)}
+clause, causing Firestore to re-deliver the ordered result set to all connected clients
+whenever any song's score changes. The queue list therefore updates live on every vote
+across all devices without additional client-side logic.
+
+On song completion, the host client additionally performs a local
+\texttt{Collections.sort()} over the remaining queued songs by score and writes
+updated \texttt{position} values to Firestore in a single batch, maintaining the
+\texttt{position} field as a persistent record of playback order.
+
+
+\subsubsection{Host Skip}
+
+The host has exclusive authority to skip the currently playing song. A skip button
+is rendered in \texttt{QueueActivity} only for the host. Pressing it calls
+\texttt{reorderAndPopNextSong()}, which marks the current song as played, sorts the
+remaining queued songs by score, and begins playback of the top-ranked song.
+Guest clients have no skip mechanism.
+
+\subsection{Algorithm Pseudocode}
+
+Algorithm~\ref{alg:songend} describes the song-end procedure executed by the host
+client, covering the score-based sort and queue update.
+
+\begin{algorithm}
+\caption{Host Song-End Procedure}
+\label{alg:songend}
+\begin{algorithmic}[1]
+\Require Current song $s_{\text{curr}}$, queue $Q$ as list of Song objects
+\Ensure Firestore queue updated with new order; next song begins playback
+
+\Function{OnSongEnded}{$s_{\text{curr}}$, $Q$}
+    \State $Q \gets Q \setminus \{s_{\text{curr}}\}$
+    \Comment{Remove completed song from queue}
+    \State \Call{RemoveSongFromFirestore}{$s_{\text{curr}}$}
+    \If{$Q = \emptyset$}
+        \State Display empty queue notice; \Return
+    \EndIf
+    \State \Call{Sort}{$Q$, descending by \texttt{score}}
+    \For{$i \gets 0$ \textbf{to} $|Q|-1$}
+        \State $Q[i].\texttt{position} \gets i$
+    \EndFor
+    \State \Call{BatchWritePositions}{$Q$}
+    \Comment{Single Firestore batch write}
+    \State \Call{BeginPlayback}{$Q[0].\texttt{youtubeVideoId}$}
+    \State \Call{WriteNowPlaying}{$Q[0].\texttt{youtubeVideoId}$}
+    \Comment{Guests sync via listener}
+\EndFunction
+\end{algorithmic}
+\end{algorithm}
+
+Algorithm~\ref{alg:vote} describes the vote-casting procedure. Each user may cast
+one vote per song; a second vote attempt on the same song is rejected by the
+transaction.
+
+\begin{algorithm}
+\caption{Vote Casting Procedure}
+\label{alg:vote}
+\begin{algorithmic}[1]
+\Require User $u$, song $s$, vote direction $v \in \{+1, -1\}$
+\Ensure Firestore vote document and song score updated atomically
+
+\Function{CastVote}{$u$, $s$, $v$}
+    \State $\texttt{voteId} \gets u.\texttt{uid} + \text{``\_''} + s.\texttt{songId}$
+    \State $\texttt{existing} \gets$ \Call{ReadVote}{\texttt{voteId}}
+    \If{$\texttt{existing} = \emptyset$}
+        \State \Call{WriteVote}{\texttt{voteId}, $v$}
+        \State \Call{IncrementField}{$s$, $v = +1$ ? \texttt{upvotes} : \texttt{downvotes}}
+        \State \Call{IncrementScore}{$s$, $v$}
+        \Comment{Atomically update score}
+    \Else
+        \State \textbf{abort transaction}
+        \Comment{One vote per user per song; duplicate rejected}
+    \EndIf
+\EndFunction
+\end{algorithmic}
+\end{algorithm}
+
+\subsection{Navigation and Activity Structure}
+
+The application navigation follows a linear host/guest bifurcation from a common entry
+point. Figure~\ref{fig:nav} illustrates the complete navigation graph.
+
+\begin{figure}[ht]
+\centering
+\fbox{\parbox{0.9\linewidth}{\small\centering
+\texttt{SplashActivity} \\
+$\downarrow$ \\
+\texttt{LoginActivity} / \texttt{RegisterActivity} \\
+$\downarrow$ \\
+\texttt{MainActivity} (Create Room \textbar{} Join Room) \\[4pt]
+$\swarrow$ \hspace{60pt} $\searrow$ \\
+\texttt{CreateRoomActivity} \hspace{20pt} \texttt{JoinRoomActivity} \\
+$\searrow$ \hspace{60pt} $\swarrow$ \\[4pt]
+\texttt{QueueActivity} (host \textbar{} guest) \\
+$\downarrow$ \hspace{30pt} $\downarrow$ \hspace{30pt} $\downarrow$ \\
+\texttt{SearchActivity} \quad \texttt{LeaderboardActivity} \quad
+\texttt{SessionSummaryActivity}
+}}
+\caption{Application navigation structure. All transitions use Android
+\texttt{Intent}-based navigation.}
+\label{fig:nav}
+\end{figure}
+
+\begin{figure*}[!ht]
+\centering
+\begin{tabular}{ccccc}
+    \includegraphics[width=0.17\linewidth]{login.png} &
+    \includegraphics[width=0.17\linewidth]{register.png} &
+    \includegraphics[width=0.17\linewidth]{home_page.png} &
+    \includegraphics[width=0.17\linewidth]{room_create.png} &
+    \includegraphics[width=0.17\linewidth]{room_join.png} \\
+    (a) Login & (b) Register & (c) Home & (d) Create room & (e) Join room \\
+\end{tabular}
+\caption{JamVote application screens: authentication flow and room management.}
+\label{fig:ui_auth}
+\end{figure*}
+
+\begin{figure}[!ht]
+\centering
+\includegraphics[width=0.45\linewidth]{song_queue_list.png}
+\caption{Collaborative queue screen showing dynamic song scoring, upvote/downvote
+controls.}
+\label{fig:ui_queue}
+\end{figure}
+
+\subsection{Setup}
+
+The application was developed and tested under the following configuration:
+
+\begin{itemize}
+    \item \textbf{Development environment}: Android Studio Electric Eel (2022.1.1),
+    Java 11, Groovy DSL \texttt{build.gradle}
+    \item \textbf{Target platform}: Android API 34; minimum supported API 25
+    (Android 7.1.1 Nougat)
+    \item \textbf{Dependencies}: Firebase Authentication 22.3.1, Cloud Firestore
+    24.10.3, Glide 4.16.0, AndroidX Lifecycle ViewModel and LiveData 2.7.0,
+    Material Components 1.11.0
+    \item \textbf{Music search}: YouTube Data API v3, accessed via HTTPS with the API
+    key stored in \texttt{local.properties} and exposed through
+    \texttt{BuildConfig.YOUTUBE\_API\_KEY}
+    \item \textbf{Test devices}: Two physical Android devices running API 25 and API 33
+    respectively, connected to the same Firebase project under a single Firestore
+    database instance in the \texttt{asia-south1} region
+    \item \textbf{Network}: Standard Wi-Fi; no network throttling applied during
+    functional testing
+\end{itemize}
+
+\subsection{SFW Content Filtering}
+
+The application supports a Safe-for-Work (SFW) mode toggled by the host at room
+creation or mid-session. When SFW mode is active, a song is blocked from being added
+to the queue if the song is flagged as explicit via \texttt{song.isExplicit()}. For the
+YouTube provider, this flag is set by checking whether
+\texttt{contentDetails.contentRating.ytRating} equals \texttt{ytAgeRestricted} in the YouTube
+Data API \texttt{videos} endpoint response. The check is performed client-side before
+the \texttt{addSong()} call reaches Firestore, and a \texttt{Snackbar} message is
+displayed to the user. This is acknowledged as a best-effort filter, as YouTube's
+content labelling is imperfect and unlabelled explicit content may pass through.
+
+\subsection{Gamification and Reputation Computation}
+
+At session end, the host triggers a status update setting \texttt{room.status =
+"ended"}, which all clients observe via their room snapshot listener and use to
+navigate to \texttt{SessionSummaryActivity}. The host computes the following per-user
+statistics from the session's song history sub-collection:
+
+\begin{itemize}
+    \item \textbf{Total upvotes received} on songs added by the user
+    \item \textbf{Total downvotes received} on songs added by the user
+\end{itemize}
+
+Two awards are distributed: \textit{Crowd Favourite} (song with the most upvotes)
+and \textit{Top Jammer} (user with the highest reputation delta). Reputation deltas
+are computed as:
+
+\begin{equation}
+\Delta\text{reputation} = (\text{upvotes\_received} \times 10) -
+(\text{downvotes\_received} \times 5) + \text{participation\_bonus}
+\label{eq:rep}
+\end{equation}
+
+where \texttt{participation\_bonus} is a fixed integer increment awarded for joining
+and contributing at least one song. Reputation updates are written to the
+\texttt{users} collection in Firestore, persisting the gamification state across
+future sessions.
+
+%% ─────────────────────────────────────────────
+%%  COMMENTED OUT — sections to be written next
+%%  + old synopsis section
+%% ─────────────────────────────────────────────
+
+
+\section{Results and Discussion}\label{sec:results}
+
+\subsection{Functional Test Setup}
+
+Functional evaluation was conducted across two physical Android devices: one running
+API level 33 (Android 13) acting as the host, and one running API level 25
+(Android 7.1.1) acting as a guest participant. Both devices were authenticated to
+separate Firebase user accounts within the same Firebase project and connected to the
+same Wi-Fi network. No network throttling was applied. All scenarios were executed
+at least twice to confirm reproducibility.
+
+\subsection{Test Scenarios and Outcomes}
+
+Table~\ref{tab:results} summarises the functional test scenarios executed and their
+observed outcomes.
+
+\begin{table*}[!ht]
+\centering
+\caption{Functional test scenarios and observed outcomes}
+\label{tab:results}
+\begin{tabular}{p{3.0cm} p{5.2cm} p{4.6cm}}
+\toprule
+\textbf{Scenario} & \textbf{Description} & \textbf{Observed Outcome} \\
+\midrule
+
+Room creation and joining
+& Host creates a room and receives a unique alphanumeric room code. Guest enters
+  the code on a second device.
+& Both devices entered \texttt{QueueActivity} with consistent room name and code.
+  Active user count incremented on both screens within one second. \\
+
+\addlinespace
+
+Song search and addition
+& Guest searches for a song by title and taps a result to add it.
+& YouTube Data API returned results within two to three seconds. Song appeared in
+  the queue on both devices within one to two seconds of addition. \\
+
+\addlinespace
+
+Vote-based queue reordering
+& Two songs present in queue. Guest upvotes the lower-ranked song.
+& Song score incremented live on both devices. The upvoted song moved to the top
+  of the queue on both devices without a manual refresh. \\
+
+\addlinespace
+
+Host playback and skip
+& Host presses play. After several seconds, host presses skip.
+& Audio began on the host device. On skip, the next highest-scored song was
+  selected and playback began from its start on both devices. \\
+
+\addlinespace
+
+Non-host playback synchronisation
+& Host begins playback. Guest device is observed.
+& Guest device began playback of the same song within one to two seconds,
+  synchronised via the \texttt{nowPlaying} Firestore field. \\
+
+\addlinespace
+
+SFW content filtering
+& Host enables SFW mode. Guest attempts to add a song flagged
+  \texttt{ytAgeRestricted}.
+& Song appeared in search results. On tap, a Snackbar message was shown and
+  the song was not added to the queue. No Firestore write was made. \\
+
+\addlinespace
+
+History view and re-queue
+& After songs have played, guest navigates to the history tab and taps a song.
+& History listed played songs in reverse chronological order. Tapped song was
+  re-added with a reset score and attributed to the guest. Queue view restored
+  automatically. \\
+
+\addlinespace
+
+Double vote prevention
+& A user attempts to vote on the same song a second time.
+& The Firestore transaction detected the existing vote document and aborted.
+  Song score was unchanged. \\
+
+\addlinespace
+
+Presence and disconnect
+& Guest closes the application without explicitly leaving the room.
+& RTDB \texttt{onDisconnect()} removed the guest's presence entry. The active
+  user count on the host's screen decremented within the RTDB disconnect
+  detection window. \\
+
+\addlinespace
+
+Session end and reputation
+& Host ends the session from room settings.
+& Both devices navigated to \texttt{SessionSummaryActivity}, displaying the
+  crowd favourite and top jammer. Reputation deltas were written atomically to
+  the \texttt{users} collection. \\
+
+\bottomrule
+\end{tabular}
+\end{table*}
+
+\subsection{Discussion}
+
+\subsubsection{Real-Time Synchronisation}
+
+Across all multi-device test scenarios, Firestore snapshot listeners propagated
+state changes — song additions, vote updates, queue reordering, and now-playing
+transitions — to all connected clients within one to two seconds on Wi-Fi. This is
+consistent with the expected behaviour described in Section~\ref{sec:methodology}
+and confirms that the serverless Firestore architecture is sufficient for real-time
+collaborative queue management at small room sizes. No missed updates or stale
+states were observed under two concurrent clients.
+
+\subsubsection{Vote-Based Queue Ordering}
+
+The score-based ordering mechanism functioned correctly in all test cases. Upvoting
+a song incremented its score and the Firestore \texttt{orderBy("score", DESCENDING)}
+query immediately delivered an updated, correctly ordered result set to both devices.
+When the host pressed skip, \texttt{reorderAndPopNextSong()} selected the
+highest-scored song, confirming that the front-end ordering and the back-end song
+selection are consistent. Songs with equal scores were ordered by \texttt{addedAt}
+ascending, which was verified by adding two songs in sequence at score zero and
+confirming the earlier addition played first.
+
+\subsubsection{Playback Synchronisation}
+
+Host-controlled playback via the YouTube IFrame API operated correctly for standard
+videos. Non-host playback synchronisation, driven by the \texttt{nowPlaying} field,
+began within the Firestore propagation window. A confirmed limitation is that
+age-restricted YouTube videos fail silently with player error codes 101 or 150 and
+are skipped automatically by the error handler, as described in
+Section~\ref{sec:limitations}.
+
+\subsubsection{SFW Content Filtering}
+
+The SFW filter correctly blocked \texttt{ytAgeRestricted} songs from being added when
+active. Rejection was instantaneous and client-side, with no Firestore write
+attempted. Songs still appeared in search results in SFW mode, allowing users to
+discover them, but addition was blocked at the point of user intent. As noted in
+Section~\ref{sec:limitations}, the filter is best-effort and dependent on YouTube's
+content labelling coverage.
+
+\subsubsection{Presence and Session Management}
+
+The RTDB presence mechanism correctly reflected the active user count across all
+tested transitions: joining, leaving via the back button, and disconnecting by closing
+the application. The \texttt{onDisconnect()} handler demonstrated correct behaviour
+on unclean disconnection, though removal latency varied between approximately five
+and thirty seconds, consistent with RTDB's server-side disconnect detection window.
+
+\subsubsection{Gamification}
+
+Session-end reputation computation executed correctly in all tests. The crowd
+favourite and top jammer were correctly identified and displayed in
+\texttt{SessionSummaryActivity}. Reputation increments were verified to be written
+atomically to the \texttt{users} collection alongside the room status update in a
+single Firestore batch, preventing partial state.
+
+\clearpage
+\section{Conclusion}\label{sec:conclusion}
+
+This paper presented JamVote, a native Android application implementing a
+non-blocking democratic music queue system built on Firebase Firestore and Firebase
+Realtime Database without a dedicated application server. The system was designed to
+address the following research question: \textit{How can a mobile application
+implement a non-blocking, democratic music queue system that dynamically balances
+collective engagement, user fairness, and playback continuity without requiring
+unanimous participation or a centralised moderator?}
+
+The implemented system demonstrates that this is achievable within a lightweight,
+serverless mobile architecture. Songs are added to a shared queue and ranked in real
+time by a vote score derived from upvotes and downvotes, with Firestore's
+\texttt{orderBy} mechanism propagating queue reordering to all connected clients on
+every vote. Playback continuity is guaranteed by the host client, which automatically
+advances the queue when a song ends and can skip the current song at any time.
+Non-host clients synchronise playback by observing the \texttt{nowPlaying} field on
+the room document, achieving consistent audio state across devices within Firestore's
+propagation latency of approximately one to two seconds. Vote integrity is enforced
+at the database level through a composite-key deduplication scheme that prevents
+double voting without requiring a query. A content moderation layer blocks
+age-restricted content from being added to the queue when SFW mode is active. A
+session-end gamification module computes per-user reputation deltas and identifies
+session awards, persisting them to a cross-session user profile in Firestore.
+
+Functional evaluation across two physical Android devices confirmed correct behaviour
+across all principal features: room creation and joining, song search and addition,
+vote-based queue reordering, host and non-host playback synchronisation, SFW content
+filtering, history viewing and re-queuing, double vote prevention, presence tracking,
+and session-end reputation computation. The principal confirmed limitation is the
+inability to play age-restricted YouTube videos in the embedded \texttt{WebView}
+without an authenticated YouTube browser session, which causes such videos to be
+silently skipped.
+
+The results confirm that the combination of Firestore's real-time snapshot listener
+infrastructure and RTDB's \texttt{onDisconnect()} mechanism is sufficient to sustain
+democratic, presence-aware queue governance across concurrent mobile clients without
+server-side business logic, at the scale of small private listening rooms.
+
+\section{Study Limitations}\label{sec:limitations}
+
+\subsection{Functional Testing Scope}
+
+The evaluation of JamVote was conducted through functional testing across less than 5 physical Android devices and did not include systematic load testing or stress
+testing under high concurrency. The behaviour of the system under large room sizes, specifically queue reordering and presence heartbeat
+aggregation, was not evaluated beyond three simultaneous clients. It is therefore not possible to claim that the current implementation scales to rooms with tens or
+hundreds of concurrent participants without further testing. Firestore read and write
+quotas under the free Spark tier impose hard limits that were not approached during
+testing but would become relevant in production deployments.
+
+\subsection{Device and Platform Constraints}
+
+Testing was conducted on three devices running API levels 25 and 33 respectively,
+which does not constitute a representative sample of the Android device ecosystem.
+Manufacturer-specific battery optimisation policies on certain Android devices
+aggressively kill background processes, which may cause the presence heartbeat
+handler to be suspended, leading to stale active user counts. This behaviour was not systematically evaluated across device
+manufacturers. iOS support was outside the scope of this study; the application is Android-exclusive and no cross-platform evaluation was performed.
+
+\subsection{Network Environment Restrictions}
+
+All functional testing was conducted on a standard Wi-Fi network with no throttling, packet loss simulation, or latency injection. The real-time synchronisation latency of one to two seconds reported for Firestore snapshot
+listeners reflects idealised network conditions. Performance under high-latency
+or intermittent connectivity conditions common in party or event environments
+where cellular networks may be congested was not evaluated. The
+\texttt{onDisconnect()} handler that closes the room on host disconnection
+relies on Firestore's server-side detection of client dropout, which may fire
+with significant delay under degraded network conditions, leaving guest clients
+in an inconsistent state.
+
+\subsection{Content Filtering Accuracy}
+
+The SFW mode implementation relies on YouTube's \texttt{ytAgeRestricted} content
+rating flag, which is acknowledged as a best-effort filter. YouTube does not
+systematically label all explicit music content, and a substantial proportion of
+explicit tracks do not carry the age-restriction flag. This means the SFW mode
+cannot provide a reliable content guarantee and should be considered an
+approximate filter rather than an enforceable policy. A production-grade
+implementation would require integration with a dedicated content moderation
+API or the Spotify \texttt{track.explicit} field, which provides more reliable
+labelling.
+
+A further limitation affects age-restricted videos outside of SFW mode. YouTube's
+embedded player requires an authenticated browser session to play
+\texttt{ytAgeRestricted} content. Because the application's \texttt{WebView} maintains
+no YouTube user session, such videos fail silently with player error codes 101 or 150
+and are skipped by the error handler. This cannot be resolved without establishing a
+YouTube browser session within the application, which is outside the current
+implementation scope.
+
+\subsection{Host Trust and Security Model}
+
+The current architecture places significant trust in the host client. Queue
+reordering and session-end reputation computation are both executed client-side on
+the host device and written directly to Firestore. A malicious or modified host
+client could manipulate queue order or issue incorrect reputation deltas without
+detection.
+Moving these operations to Firebase Cloud Functions would eliminate this trust
+assumption but was outside the scope of the current implementation. The Firestore
+security rules deployed for this study enforce per-user write restrictions on
+votes and presence documents but do not validate the correctness of sort or
+scoring operations.
+
+\subsection{Gamification Evaluation}
+
+The gamification and reputation system was implemented and verified for functional
+correctness, badges are awarded and reputation deltas are written correctly at
+session end but was not evaluated for its effect on user behaviour or engagement.
+Claims made in the related literature regarding the positive effect of reputation
+systems on sustained engagement~\cite{jamvote_online_community_motivation,
+jamvote_gamification_works} were not empirically validated within this app.
+A user study measuring curation quality, session duration, or return participation
+across sessions with and without the gamification layer was outside the project
+scope.
+
+
+\section{Future Scope}\label{sec:future}
+
+Several directions for extending and improving JamVote are identified based on the
+scope boundaries and design decisions of the current implementation.
+
+\subsection{Methodological Improvements}
+
+The current dynamic scoring formula assigns a fixed weight to contributor reputation
+as a tiebreaker. Future work could explore adaptive weighting mechanisms that adjust
+the reputation coefficient based on session context, such as room size or historical
+voting variance, potentially improving queue fairness in large heterogeneous groups.
+
+\subsection{Spotify Integration and Music Provider Abstraction}
+
+The current implementation uses the YouTube Data API v3 for music search and playback.
+Spotify was not adopted as the music backend because its Web API requires an extensive
+OAuth permission scope, mandates application review and approval for production access,
+and its playback SDK is a paid service restricted to Spotify Premium subscribers,
+making it impractical for an open, freely accessible application at this stage.
+
+A natural extension of the current implementation would nonetheless be to introduce a
+music provider abstraction layer and swap the existing \texttt{YouTubeProvider} for a
+Spotify-backed implementation. Spotify integration would provide reliable explicit
+content flagging via the \texttt{track.explicit} boolean field, gapless playback, and
+access to audio features such as tempo, energy, and danceability, which could be used
+to implement a vibe continuity engine that automatically suggests songs matching the
+current session's acoustic profile.
+
+\subsection{Vibe Continuity and Automated Queue Filling}
+
+When the queue is exhausted, the current implementation stalls playback. A vibe
+continuity module could automatically suggest or insert songs based on the acoustic
+similarity of recently played tracks, using audio feature vectors from the Spotify
+Web API or a lightweight on-device genre classifier. This would ensure uninterrupted
+playback in sessions where user participation drops temporarily.
+
+\subsection{Distributed Host and Session Resilience}
+
+The current architecture assigns permanent host authority to the room creator, and
+closes the session on host disconnection. A distributed host election mechanism,
+for example, assigning host authority to the participant with the lowest join
+timestamp among active users would improve session resilience in long-running or
+large-group settings where host dropout is more probable.
+
+\subsection{Scalability and Public Room Support}
+
+The current implementation targets private rooms with small participant counts.
+Scaling to public rooms with potentially hundreds of concurrent users would require
+rate-limiting vote writes, batching presence heartbeats, and potentially migrating
+queue state management to Firebase Cloud Functions to reduce the trust placed in
+the host client for sort and dominance operations. This would also remove the
+current vulnerability in which a malicious host client could manipulate queue
+ordering.
+
+\subsection{Manipulation Resistance}
+
+As noted in the gamification literature~\cite{jamvote_online_community_motivation,
+jamvote_gamification_works}, reputation systems in competitive voting environments
+are susceptible to coordinated manipulation. Future work could investigate
+rate-limiting vote operations per user per session, detecting anomalous voting
+patterns via Firestore Cloud Functions, and applying trust-decay mechanisms that
+reduce the influence of reputation scores accumulated through suspected collusion.
+
+\subsection{Cross-Platform Extension}
+
+The current application targets Android exclusively. A cross-platform implementation
+using a framework such as Flutter would extend JamVote to iOS, enabling mixed-device
+sessions and broadening the potential user base for party and event use cases.
+Web-based room management, allowing non-mobile participants to join and vote via a
+browser, is a natural extension that would not require changes to the core Firestore
+data model.
+
+\begin{comment}
+\section{Project Synopsis}\label{sec1}
+
+\subsection{Purpose of The App}\label{subssec2}
+
+JamVote is a real-time collaborative music streaming platform designed to enhance shared
+listening experiences in parties, remote friend groups, and public community rooms.
+
+Unlike existing collaborative playlist systems, JamVote introduces an intelligent,
+non-blocking governance model that balances democratic input, fairness, and automated vibe
+continuity, ensuring sessions never stall and no single user dominates the queue.
+
+\subsection{Problem Statement}\label{subsec2}
+
+Current collaborative music solutions allow multiple users to add and reorder songs in a
+shared queue. However, these systems exhibit several limitations:
+\begin{itemize}
+    \item \textbf{Manual Queue Dominance}: Users can drag and reorder tracks arbitrarily,
+    leading to unfair control.
+    \item \textbf{No Collective Feedback Mechanism}: There is no structured voting or
+    engagement-based ranking.
+    \item \textbf{No Continuity Intelligence}: When the queue runs out, playback depends
+    on an individual's existing playlist.
+    \item \textbf{Lack of Gamification}: No reward system for good music curation.
+    \item \textbf{No Adaptive Governance}: No differentiation between active and inactive
+    users.
+\end{itemize}
+
+\subsection{Objectives}\label{subsec2b}
+
+The objectives of JamVote are:
+\begin{itemize}
+    \item To design and develop a real-time collaborative music Android application.
+    \item To design a non-blocking collaborative queue system.
+    \item To implement a dynamic scoring mechanism.
+    \item To ensure fairness by preventing queue monopolization.
+    \item To develop a genre continuity engine for auto-filling music when required.
+    \item To introduce gamification and reputation systems.
+    \item To maintain scalability across both private and public listening rooms.
+\end{itemize}
+
+\subsection{Project Scope}\label{subsec2c}
+
+\subsubsection{User Authentication and Room Management}
+\subsubsection{Real-Time Collaborative Queue System}
+\subsubsection{Non-Blocking Voting Mechanism}
+\subsubsection{Vibe Continuity Module}
+\subsubsection{Gamification and Reputation System}
+
+\end{comment}
+
+\clearpage
+\bibliography{sn-bibliography}
+
+\end{document}
