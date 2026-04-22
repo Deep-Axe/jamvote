@@ -34,7 +34,7 @@ Unlike existing collaborative playlist systems that rely on manual queue reorder
 
 1.  **Clone the repository:**
     ```bash
-    git clone <your-repository-url>
+    git clone https://github.com/Deep-Axe/jamvote.git
     ```
 2.  **Open the project** in Android Studio.
 3.  **Allow Gradle to sync** and download the required dependencies.
